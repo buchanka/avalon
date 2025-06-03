@@ -1,0 +1,33 @@
+div.bg-icecream {
+  background-image: 
+    url("../assets/images/monograms/mono_left.png"),
+    url("../assets/images/monograms/mono_right.png"),
+    linear-gradient(white, white);
+  background-position: 
+    left center,
+    right center,
+    center center;
+  background-repeat: no-repeat;
+  background-size: 
+    auto 70px,
+    auto 70px,
+    auto;
+}
+
+@media (min-width: 768px) {
+  div.bg-icecream {
+    background-size: 
+      auto 90px,
+      auto 90px,
+      auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  div.bg-icecream {
+    background-size: 
+      auto 100px,
+      auto 100px,
+      auto;
+  }
+}
