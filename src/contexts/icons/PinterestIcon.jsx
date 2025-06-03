@@ -1,3 +1,4 @@
+import React from 'react';
 import { IconContext } from "react-icons";
 import { SiPinterest } from "react-icons/si";
 function InstagramIconSmall(){

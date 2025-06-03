@@ -1,3 +1,4 @@
+import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/admindash_layout/Sidebar';
 import Header from '../components/admindash_layout/Header';

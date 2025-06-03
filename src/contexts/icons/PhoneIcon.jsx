@@ -1,3 +1,4 @@
+import React from 'react';
 import { IconContext } from "react-icons";
 import { BsTelephone } from "react-icons/bs"; 
 function PhoneIconSmall(){

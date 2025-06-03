@@ -1,3 +1,4 @@
+import React from 'react';
 import { IconContext } from "react-icons";
 import { RiTelegramLine } from "react-icons/ri";
 function TelegramIconSmall(){

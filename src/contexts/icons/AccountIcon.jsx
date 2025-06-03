@@ -1,3 +1,4 @@
+import React from 'react';
 import { IconContext } from "react-icons";
 import { RiAccountCircleFill } from "react-icons/ri";
 function AccountIconSmall(){

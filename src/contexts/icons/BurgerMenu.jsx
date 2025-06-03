@@ -1,3 +1,4 @@
+import React from 'react';
 import { IconContext } from "react-icons";
 import { RxHamburgerMenu } from "react-icons/rx";
 function HamburgerMenu(){

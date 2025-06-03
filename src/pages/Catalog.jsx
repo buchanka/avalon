@@ -1,3 +1,4 @@
+import React from 'react';
 import ProductCards from "../components/ProductCards";
 import FilterButton from "../components/FilterButton";
 import SortButton from "../components/SortButton";

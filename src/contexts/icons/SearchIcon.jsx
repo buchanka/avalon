@@ -1,3 +1,4 @@
+import React from 'react';
 import { IconContext } from "react-icons";
 import { IoSearchSharp } from "react-icons/io5";
 function SearchIconSmall(){

@@ -1,3 +1,4 @@
+import React from 'react';
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { TiShoppingCart } from "react-icons/ti";
 

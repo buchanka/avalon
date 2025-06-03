@@ -1,3 +1,4 @@
+import React from 'react';
 import { FaRegHeart } from "react-icons/fa";
 import { IconContext } from "react-icons";
 

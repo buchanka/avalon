@@ -1,3 +1,4 @@
+import React from 'react';
 import CarouselComponent from '../components/CarouselComponent';
 import SecondBlock from "../components/SecondBlock";
 import TileOfCollections from "../components/TileOfCollections";

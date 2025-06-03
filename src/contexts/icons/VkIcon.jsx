@@ -1,3 +1,4 @@
+import React from 'react';
 import { IconContext } from "react-icons";
 import { FaVk } from "react-icons/fa6";
 function VkIconSmall(){
