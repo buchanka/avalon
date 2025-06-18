@@ -5,6 +5,8 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { Link } from "react-router-dom";
+import api from "../services/api";
+import { setAuthToken } from '../services/api';
 
 export default function LoginForm({ onSwitchForm, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -24,20 +26,34 @@ export default function LoginForm({ onSwitchForm, onSuccess }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
-    // Имитация успешного входа
-    setTimeout(() => {
-      console.log('Форма входа отправлена', formData);
-      setIsLoading(false);
+
+    try {
+      const response = await api.post('/login', {
+        email: formData.email,
+        password: formData.password
+      });
+
+      const { token } = response.data;
+      localStorage.setItem('token', token);
+      setAuthToken(token);
       
-      // Закрываем попап и переходим в профиль
       if (onSuccess) onSuccess();
+      
       navigate('/user_profile');
-    }, 1000);
+    } catch (error) {
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else {
+        setError('Произошла ошибка входа');
+        console.error(error);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -122,7 +138,7 @@ export default function LoginForm({ onSwitchForm, onSuccess }) {
           <Link 
             to="/admin" 
             className="font-medium text-blue-600 hover:underline"
-            onClick={onSuccess} // Закрываем попап при переходе
+            onClick={onSuccess}
           >
             Войти в админ-панель
           </Link>

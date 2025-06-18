@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { LayoutDashboard, Package, ShoppingCart, User, Users } from "lucide-react";
 import { Card } from "../ui/card";
+import AdminLogoutButton from "./AdminLogoutButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +43,9 @@ export default function Sidebar() {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem>Профиль</DropdownMenuItem>
-          <DropdownMenuItem>Выйти</DropdownMenuItem>
+          <DropdownMenuItem>
+            <AdminLogoutButton/>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       </div>

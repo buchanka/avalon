@@ -34,7 +34,7 @@ export default function AuthModal({ isOpen, onClose, type }) {
         onClick={handleClose}
       ></div>
       
-      <div className={`bg-white rounded-md shadow-lg p-6 z-50 w-full max-w-md relative transition-all duration-200 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}>
+      <div className={`bg-white rounded-md shadow-lg p-6 z-50 w-full max-w-2xl md:max-w-xl sm:max-w-lg relative transition-all duration-200 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}>
         <button
           onClick={handleClose}
           className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-200 focus:outline-none transition-colors"

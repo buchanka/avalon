@@ -1,34 +1,79 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { ShoppingCart, Heart, Package, User } from "lucide-react";
 import { Card, CardHeader, CardContent } from "../components/ui/card";
+import LogoutButton from '../components/LogoutButton';
+import UploadAvatar from '../components/UploadAvatar';
+import api from '../services/api';
 
 export default function UserProfile() {
-  // Демо-данные пользователя
-  const user = {
-    first_name: "Иван",
-    last_name: "Иванов",
-    email: "ivan@example.com",
-    avatar: "/placeholder-avatar.jpg"
-  };
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+        try {
+            const response = await api.get('/customer/profile');
+            const userData = response.data.user;
+            if (userData.avatar) { 
+                userData.avatar = `${userData.avatar}${
+                    userData.avatar.includes('?') ? '&' : '?'
+                }t=${Date.now()}`;
+            }
+            setUser(userData);
+        } catch (error) {
+            console.error('Ошибка при загрузке данных пользователя:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchUser();
+}, []);
+
+  const handleProfileUpdate = (updatedUser) => {
+      setUser(prev => ({
+        ...prev,
+        ...updatedUser,
+        avatar: updatedUser.avatar 
+          ? `${updatedUser.avatar}?t=${Date.now()}`
+          : prev.avatar
+      }));
+    };
+
+  if (loading) {
+    return <div className="container mx-auto py-8 px-4">Загрузка...</div>;
+  }
+
+  if (!user) {
+    return <div className="container mx-auto py-8 px-4">Ошибка загрузки данных пользователя</div>;
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-2xl font-bold mb-8">Личный кабинет</h1>
       
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Левая колонка - навигация */}
         <div className="w-full lg:w-1/4 space-y-4">
           <Card className="p-4">
             <div className="flex flex-col items-center mb-6">
               <div className="w-24 h-24 rounded-full bg-gray-100 overflow-hidden mb-4">
                 <img 
-                  src={user.avatar} 
-                  alt="Аватар" 
+                  src={user.avatar || "/placeholder-avatar.jpg"} 
+                  alt="Аватар"
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = "/placeholder-avatar.jpg";
+                    if (user.avatar) {
+                      setTimeout(() => {
+                        e.target.src = `${user.avatar}?retry=${Date.now()}`;
+                      }, 500);
+                    }
+                  }}
                 />
               </div>
+              <UploadAvatar onAvatarUpdate={(url) => setUser((prev) => ({ ...prev, avatar: url }))} />
               <h2 className="text-lg font-medium text-center">
                 {user.first_name} {user.last_name}
               </h2>
@@ -57,7 +102,6 @@ export default function UserProfile() {
           </Card>
         </div>
         
-        {/* Правая колонка - информация */}
         <div className="flex-1">
           <Card>
             <CardHeader>
@@ -91,8 +135,10 @@ export default function UserProfile() {
                     <p className="font-medium">{user.email}</p>
                   </div>
                 </div>
-                
-                
+                <div className='flex flex-row gap-2 justify-start'>
+                  <LogoutButton></LogoutButton>
+                   
+                </div>
               </div>
             </CardContent>
           </Card>

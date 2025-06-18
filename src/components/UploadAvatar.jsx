@@ -1,52 +1,54 @@
-import React from 'react';
-import { useState } from "react";
-import api from "../services/api";
+import React, { useState } from 'react';
+import api from '../services/api';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
-export default function UploadAvatar() {
+export default function UploadAvatar({ onAvatarUpdate }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
+  const handleUpload = async (file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  setLoading(true);
 
-    setLoading(true);
-    setError(null);
+  try {
+    const response = await api.post('/customer/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
-    const formData = new FormData();
-    formData.append("avatar", file);
-
-    try {
-        // Шаг 1: получить CSRF токен (в куке XSRF-TOKEN)
-        await api.get("/sanctum/csrf-cookie");
-
-        // Шаг 2: загрузка аватара
-        await api.post("/api/user/upload-avatar", formData, {
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
-        });
-
-        alert("Аватар загружен успешно");
-    } catch (err) {
-        console.error("Ошибка при загрузке аватара:", err);
-        setError("Не удалось загрузить аватар");
-    } finally {
-        setLoading(false);
+    if (response.data.url) {
+      // Принудительное обновление с уникальным параметром
+      const newUrl = `${response.data.url}?force=${Date.now()}`;
+      
+      // Создаём новое изображение для предзагрузки
+      const img = new Image();
+      img.src = newUrl;
+      img.onload = () => {
+        // Двойное обновление для гарантии
+        onAvatarUpdate('');
+        setTimeout(() => onAvatarUpdate(newUrl), 100);
+      };
+      img.onerror = () => console.error('Image load error');
     }
+  } catch (error) {
+    console.error('Ошибка при загрузке аватара:', error);
+  } finally {
+    setLoading(false);
+    setFile(null);
+  }
 };
 
   return (
-    <div>
-      <input type="file" accept="image/*" onChange={handleFileChange} />
-      <button onClick={handleUpload} disabled={loading}>
-        {loading ? "Загружается..." : "Загрузить аватар"}
-      </button>
-      {error && <p>{error}</p>}
+    <div className="space-y-3">
+      <Input type="file" accept="image/*" onChange={handleFileChange} />
+      <Button onClick={() => handleUpload(file)} disabled={loading || !file}>
+        {loading ? 'Загрузка...' : 'Загрузить аватар'}
+      </Button>
     </div>
   );
 }

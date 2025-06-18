@@ -1,16 +1,18 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import { useState } from "react"; 
+import { useState } from "react";
+import { setAuthToken } from '../services/api';
 
 export default function LogoutButton() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogout = () => {
+   const handleLogout = () => {
     setIsLoading(true);
-    console.log('Пользователь вышел');
+    localStorage.removeItem('token');
+    setAuthToken(null);
     setIsLoading(false);
-    navigate("/"); 
+    navigate("/");
   };
 
   return (

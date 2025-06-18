@@ -1,24 +1,43 @@
-import React from 'react';
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../components/ui/card";
+import api from "../services/api";
+import { setAuthToken } from '../services/api';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const isFormValid = email.trim() !== "" && password.trim() !== "";
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isFormValid) return;
     setIsLoading(true);
-    // Здесь могла бы быть логика авторизации
-    setTimeout(() => setIsLoading(false), 1000);
+    setError("");
+
+    try {
+      const response = await api.post('/admin/login', {
+        email,
+        password
+      });
+
+      const { token } = response.data;
+      localStorage.setItem('admin_token', token);
+      setAuthToken(token);
+      navigate('/admin_dash');
+    } catch (err) {
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError('Произошла ошибка при входе');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -28,6 +47,11 @@ export default function AdminLogin() {
           <CardTitle className="text-center">Вход в админ-панель</CardTitle>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm">
+              {error}
+            </div>
+          )}
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -53,17 +77,13 @@ export default function AdminLogin() {
               />
             </div>
             
-            {isFormValid ? (
-              <Link to="/admin_dash" className="block">
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Вход...' : 'Войти'}
-                </Button>
-              </Link>
-            ) : (
-              <Button type="submit" className="w-full" disabled>
-                Введите данные
-              </Button>
-            )}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading || !email || !password}
+            >
+              {isLoading ? 'Вход...' : 'Войти'}
+            </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">

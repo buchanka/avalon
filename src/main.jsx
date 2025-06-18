@@ -28,6 +28,7 @@ import AddUser from './pages/AddUser';
 import Orders from './pages/Orders';
 
 const router = createBrowserRouter([
+
   {
     path: "/",
     element: (<Layout><Home/></Layout>),
