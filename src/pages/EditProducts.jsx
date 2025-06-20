@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -8,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import api from '../services/api';
 import { toast } from 'sonner';
 
-export default function AddProduct() {
+export default function EditProduct() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -20,30 +23,58 @@ export default function AddProduct() {
     burn_time: '',
     stock: '',
     image: null,
-    collection_ids: []
+    collection_ids: [],
+    existingImage: ''
   });
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [categories, setCategories] = useState([]);
   const [collections, setCollections] = useState([]);
+  const [isFetching, setIsFetching] = useState(true);
 
-   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [categoriesResponse, collectionsResponse] = await Promise.all([
-          api.get('/admin/categories'),
-          api.get('/admin/collections')
-        ]);
-        setCategories(categoriesResponse.data);
-        setCollections(collectionsResponse.data);
-      } catch (error) {
-        console.error('Ошибка при загрузке данных:', error);
-        toast.error('Не удалось загрузить данные');
+  useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [productResponse, categoriesResponse, collectionsResponse] = await Promise.all([
+        api.get(`/admin/products/${id}`),
+        api.get('/admin/categories'),
+        api.get('/admin/collections')
+      ]);
+
+      const product = productResponse.data.product; // Здесь исправление
+      
+      setFormData({
+        name: product.name,
+        price: product.price,
+        category_id: String(product.category_id),
+        description: product.description,
+        height: product.height || '',
+        width: product.width || '',
+        length: product.length || '',
+        burn_time: product.burn_time || '',
+        stock: product.stock,
+        image: null,
+        collection_ids: product.collections?.map(c => c.id) || [],
+        existingImage: product.image
+      });
+      
+      if (product.image) {
+        setImagePreview(product.image);
       }
-    };
 
-    fetchData();
-  }, []);
+      setCategories(categoriesResponse.data);
+      setCollections(collectionsResponse.data);
+    } catch (error) {
+      console.error('Ошибка при загрузке данных:', error);
+      toast.error('Не удалось загрузить данные');
+      navigate('/admin_dash/products');
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  fetchData();
+ }, [id, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -63,7 +94,7 @@ export default function AddProduct() {
     }
   };
 
-   const handleCollectionChange = (collectionId) => {
+  const handleCollectionChange = (collectionId) => {
     setFormData(prev => {
       const newCollectionIds = prev.collection_ids.includes(collectionId)
         ? prev.collection_ids.filter(id => id !== collectionId)
@@ -76,43 +107,37 @@ export default function AddProduct() {
     });
   };
 
-   const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      let imageUrl = '';
+      let imageUrl = formData.existingImage;
+
+      // Загружаем новое изображение, если оно было изменено
       if (formData.image) {
         const imageFormData = new FormData();
         imageFormData.append('image', formData.image);
 
-        try {
-          const uploadResponse = await api.post('/admin/products/upload-image-new', imageFormData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          });
-
-          if (!uploadResponse.data || !uploadResponse.data.url) {
-            throw new Error('Неверный формат ответа сервера');
+        const uploadResponse = await api.post('/admin/products/upload-image-new', imageFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
           }
-          
-          imageUrl = uploadResponse.data.url;
-          
-          toast.success('Изображение загружено!');
-        } catch (uploadError) {
-          console.error('Ошибка загрузки изображения:', uploadError);
-          toast.error(uploadError.response?.data?.message || 'Ошибка при загрузке изображения');
-          setLoading(false);
-          return; 
+        });
+
+        if (!uploadResponse.data?.url) {
+          throw new Error('Неверный формат ответа сервера');
         }
+        
+        imageUrl = uploadResponse.data.url;
+        toast.success('Изображение обновлено!');
       }
 
       const productData = {
         ...formData,
         image: imageUrl,
         price: parseFloat(formData.price),
-        stock: parseInt(formData.stock) || 0, // Преобразование в число
+        stock: parseInt(formData.stock) || 0,
         height: formData.height ? parseFloat(formData.height) : null,
         width: formData.width ? parseFloat(formData.width) : null,
         length: formData.length ? parseFloat(formData.length) : null,
@@ -120,48 +145,44 @@ export default function AddProduct() {
         collection_ids: formData.collection_ids
       };
 
-      const createPromise = api.post('/admin/products', productData);
+      const updatePromise = api.put(`/admin/products/${id}`, productData);
 
-      await toast.promise(createPromise, {
-        loading: 'Создание товара...',
+      await toast.promise(updatePromise, {
+        loading: 'Обновление товара...',
         success: () => {
-          setFormData({
-            name: '',
-            price: '',
-            category_id: '',
-            description: '',
-            height: '',
-            width: '',
-            length: '',
-            burn_time: '',
-            stock: '',
-            image: null,
-            collection_ids: []
-          });
-          setImagePreview(null);
-          navigate('/admin_dash/products?created=true');
-          return 'Товар успешно добавлен!';
+          navigate('/admin_dash/products?updated=true');
+          return 'Товар успешно обновлен!';
         },
         error: (error) => {
-          return error.response?.data?.message || 'Произошла ошибка при создании товара';
+          return error.response?.data?.message || 'Произошла ошибка при обновлении товара';
         }
       });
 
     } catch (error) {
-      console.error('Ошибка при добавлении товара:', error);
+      console.error('Ошибка при обновлении товара:', error);
       toast.error(error.response?.data?.message || 'Произошла ошибка');
     } finally {
       setLoading(false);
     }
   };
 
+  if (isFetching) {
+    return <div className="flex justify-center items-center h-64">Загрузка...</div>;
+  }
+
   return (
     <div className="space-y-6 p-6">
-      <h1 className="text-2xl font-bold">Управление товарами</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Редактирование товара</h1>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/admin_dash/products')}
+        >
+          Назад к списку
+        </Button>
+      </div>
       
-      {/* Форма добавления товара */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Добавить новый товар</h2>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -219,7 +240,7 @@ export default function AddProduct() {
               </Select>
             </div>
 
-              <div className="space-y-2">
+            <div className="space-y-2">
               <Label>Коллекции</Label>
               <div className="grid grid-cols-2 gap-2">
                 {collections.map(collection => (
@@ -331,10 +352,10 @@ export default function AddProduct() {
                 accept="image/*"
                 onChange={handleFileChange}
               />
-              {imagePreview && (
+              {(imagePreview || formData.existingImage) && (
                 <div className="w-16 h-16 rounded-md overflow-hidden border">
                   <img 
-                    src={imagePreview} 
+                    src={imagePreview || formData.existingImage} 
                     alt="Превью" 
                     className="w-full h-full object-cover"
                   />
@@ -344,26 +365,15 @@ export default function AddProduct() {
           </div>
           
           <div className="flex justify-end gap-2">
-            <Button variant="outline" type="button" onClick={() => {
-              setFormData({
-                name: '',
-                price: '',
-                category_id: '',
-                description: '',
-                height: '',
-                width: '',
-                length: '',
-                burn_time: '',
-                stock: '',
-                image: null,
-                collection_ids: []
-              });
-              setImagePreview(null);
-            }}>
-              Очистить
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => navigate('/admin_dash/products')}
+            >
+              Отмена
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Сохранение...' : 'Сохранить товар'}
+              {loading ? 'Сохранение...' : 'Сохранить изменения'}
             </Button>
           </div>
         </form>

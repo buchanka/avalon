@@ -32,8 +32,10 @@ import EditProfile from './pages/EditProfile';
 import AddCollection from './pages/AddCollection';
 import DashCollections from './pages/DashCollections';
 import EditCollection from './pages/EditCollections';
-import AddCategories from './pages/AddCategories';
+import AddCategory from './pages/AddCategory';
 import DashCategories from './pages/DashCategories';
+import EditCategories from './pages/EditCategories';
+import EditProducts from './pages/EditProducts';
 
 const router = createBrowserRouter([
 
@@ -158,6 +160,16 @@ const router = createBrowserRouter([
         path: "categories",
         element: <DashCategories/>,
       },
+
+      {
+        path: "categories/edit/:id",
+        element: <EditCategories/>,
+      },
+
+      {
+        path: "products/edit/:id",
+        element: <EditProducts/>,
+      }
     ]
   }
 ]);
