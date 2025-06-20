@@ -1,27 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import api from '../services/api';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-export default function AddCollection() {
+export default function EditCollection() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const { id } = useParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchCollection = async () => {
+      try {
+        const response = await api.get(`/admin/collections/${id}`);
+        setName(response.data.name);
+      } catch (error) {
+        console.error('Ошибка при загрузке коллекции:', error);
+        toast.error('Не удалось загрузить коллекцию');
+      }
+    };
+
+    fetchCollection();
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await api.post('/admin/collections', { name });
+      await api.put(`/admin/collections/${id}`, { name });
       
-      toast.success('Коллекция успешно создана!');
+      toast.success('Коллекция успешно обновлена!');
       navigate('/admin_dash/collections');
     } catch (error) {
-      console.error('Ошибка при создании коллекции:', error);
+      console.error('Ошибка при обновлении коллекции:', error);
       toast.error(error.response?.data?.message || 'Произошла ошибка');
     } finally {
       setLoading(false);
@@ -30,10 +45,9 @@ export default function AddCollection() {
 
   return (
     <div className="space-y-6 p-6">
-      <h1 className="text-2xl font-bold">Управление коллекциями</h1>
+      <h1 className="text-2xl font-bold">Редактирование коллекции</h1>
       
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Добавить новую коллекцию</h2>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="name">Название коллекции</Label>
@@ -50,12 +64,12 @@ export default function AddCollection() {
             <Button 
               variant="outline" 
               type="button" 
-              onClick={() => setName('')}
+              onClick={() => navigate('/admin_dash/collections')}
             >
-              Очистить
+              Отмена
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Сохранение...' : 'Сохранить коллекцию'}
+              {loading ? 'Сохранение...' : 'Сохранить изменения'}
             </Button>
           </div>
         </form>

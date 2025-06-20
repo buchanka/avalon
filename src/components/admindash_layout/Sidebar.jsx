@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingCart, User, Users } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, User, Users, InboxIcon } from "lucide-react";
 import { Card } from "../ui/card";
 import AdminLogoutButton from "./AdminLogoutButton";
 import {
@@ -29,6 +29,9 @@ export default function Sidebar() {
           </Link>
           <Link to="/admin_dash/users" className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted">
             <Users className="w-5 h-5" /> Пользователи
+          </Link>
+          <Link to="/admin_dash/collections" className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted">
+            <InboxIcon className="w-5 h-5" /> Коллекции
           </Link>
         </nav>
 

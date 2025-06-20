@@ -31,6 +31,9 @@ import Orders from './pages/Orders';
 import EditProfile from './pages/EditProfile';
 import AddCollection from './pages/AddCollection';
 import DashCollections from './pages/DashCollections';
+import EditCollection from './pages/EditCollections';
+import AddCategories from './pages/AddCategories';
+import DashCategories from './pages/DashCategories';
 
 const router = createBrowserRouter([
 
@@ -139,6 +142,21 @@ const router = createBrowserRouter([
       {
         path: "collections",
         element: <DashCollections/>,
+      },
+
+      {
+        path: "collections/edit/:id",
+        element: <EditCollection/>,
+      },
+
+      {
+        path: "add_category",
+        element: <AddCategory/>,
+      },
+
+      {
+        path: "categories",
+        element: <DashCategories/>,
       },
     ]
   }
