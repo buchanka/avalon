@@ -17,11 +17,6 @@ export const ProductCard = () => {
           <div className="bg-gray-200 rounded-lg overflow-hidden aspect-square flex items-center justify-center m-4">
             <p className="text-gray-500">Изображение товара</p>
           </div>
-
-          {/* Аккордеон только на мобильных */}
-          <div className="mt-4 md:hidden">
-            <ProductAccordion />
-          </div>
         </div>
 
         {/* Правая часть (вся информация) */}
@@ -82,11 +77,6 @@ export const ProductCard = () => {
                 <CardButtons />
               </div>
             </div>
-          </div>
-
-          {/* Аккордеон для десктопа */}
-          <div className="hidden md:block mt-4 order-8">
-            <ProductAccordion />
           </div>
         </div>
       </div>

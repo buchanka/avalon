@@ -4,7 +4,7 @@ import Sidebar from "../components/admindash_layout/Sidebar";
 
 export default function AdminDash() {
   return (
-      <div> 
+      <div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader>

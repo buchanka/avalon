@@ -8,6 +8,8 @@ import { MenuProvider } from './contexts/BurgerMenuContext/MenuContext';
 //компоненты
 import Layout from './Layout/Layout';
 import AdminDashLayout from './Layout/AdminDashLayout';
+//уведомления
+import { Toaster } from 'sonner';
 //страницы
 import Home from './pages/Home';
 import ErrorPage from './pages/ErrorPage';
@@ -26,6 +28,9 @@ import AddProduct from './pages/AddProduct';
 import DashUsers from './pages/DashUsers';
 import AddUser from './pages/AddUser';
 import Orders from './pages/Orders';
+import EditProfile from './pages/EditProfile';
+import AddCollection from './pages/AddCollection';
+import DashCollections from './pages/DashCollections';
 
 const router = createBrowserRouter([
 
@@ -71,9 +76,14 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage/>
   },
 
-  {
+    {
     path: "/user_profile",
     element: (<Layout><UserProfile/></Layout>),
+    errorElement: <ErrorPage/>
+  },
+  {
+    path: "/user_profile/edit",
+    element: (<Layout><EditProfile/></Layout>),
     errorElement: <ErrorPage/>
   },
 
@@ -95,16 +105,12 @@ const router = createBrowserRouter([
 
   {
     path: "/admin_dash",
-    element: (
-      <AdminDashLayout>
-        <AdminDash /> 
-      </AdminDashLayout>
-    ),
-    errorElement: <ErrorPage />,
+    element: <AdminDashLayout/>,
+    errorElement: <ErrorPage/>,
     children: [ 
       {
         index: true,
-        element: <AdminDash /> 
+        element: <AdminDash/> 
       },
       {
         path: "products", 
@@ -126,6 +132,14 @@ const router = createBrowserRouter([
         path: "add_user",
         element: <AddUser/>,
       },
+      {
+        path: "add_collection",
+        element: <AddCollection/>,
+      },
+      {
+        path: "collections",
+        element: <DashCollections/>,
+      },
     ]
   }
 ]);
@@ -135,5 +149,6 @@ createRoot(document.getElementById("root")).render(
     <MenuProvider>
       <RouterProvider router={router} /> 
     </MenuProvider>
+    <Toaster position="top-right" richColors />
   </StrictMode>
 );

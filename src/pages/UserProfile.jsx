@@ -137,7 +137,11 @@ export default function UserProfile() {
                 </div>
                 <div className='flex flex-row gap-2 justify-start'>
                   <LogoutButton></LogoutButton>
-                   
+                   <Link to="/user_profile/edit">
+                   <Button className="hover:bg-cornflower_blue/20">
+                    <p>Редактировать профиль</p>
+                    </Button>
+                   </Link>
                 </div>
               </div>
             </CardContent>

@@ -8,7 +8,6 @@ export const ProductAccordion = () => {
     { title: 'Описание аромата', content: 'Пункт 1' },
     { title: 'Состав', content: 'Пункт 2' },
     { title: 'Рекомендации по уходу', content: 'Пункт 3' },
-    { title: 'Упаковка', content: 'Пункт 4' },
   ];
 
   const toggleSection = (index) => {

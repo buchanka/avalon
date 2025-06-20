@@ -11,7 +11,7 @@ import {
 
 export default function Sidebar() {
   return (
-    <div className="hidden border-r bg-muted/40 md:block w-64 fixed h-screen">
+    <div className="border-r bg-muted/40 md:block w-64 fixed h-screen ">
       <div className="flex flex-col h-full">
         <div className="p-4 border-b">
           <h1 className="text-xl font-semibold">Админ</h1>
