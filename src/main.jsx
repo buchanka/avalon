@@ -36,6 +36,7 @@ import AddCategory from './pages/AddCategory';
 import DashCategories from './pages/DashCategories';
 import EditCategories from './pages/EditCategories';
 import EditProducts from './pages/EditProducts';
+import EditUser from './pages/EditUser';
 
 const router = createBrowserRouter([
 
@@ -136,6 +137,10 @@ const router = createBrowserRouter([
       {
         path: "add_user",
         element: <AddUser/>,
+      },
+      {
+        path: "users/edit/:id",
+        element: <EditUser/>,
       },
       {
         path: "add_collection",
