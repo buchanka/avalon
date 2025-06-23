@@ -1,5 +1,6 @@
 {
   "name": "avalon",
+  "homepage": "https://buchanka.github.io/avalon",
   "private": true,
   "version": "0.0.0",
   "type": "module",

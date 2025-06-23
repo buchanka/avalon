@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { createHashRouter } from 'react-router-dom';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
 import { StrictMode } from 'react';
@@ -43,7 +44,7 @@ import EditCategories from './pages/EditCategories';
 import EditProducts from './pages/EditProducts';
 import EditUser from './pages/EditUser';
 
-const router = createBrowserRouter([
+const router = createHashRouter([
 
   {
     path: "/",
