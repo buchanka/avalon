@@ -1,17 +1,6 @@
 import React from 'react';
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
-
-// Создаем экземпляр axios с базовыми настройками
-const api = axios.create({
-  baseURL: 'http://my-shop',
-  withCredentials: true,
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest'
-  }
-});
+import api, { setAuthToken } from "../services/api"; // Используем общий экземпляр
 
 const AuthContext = createContext();
 
@@ -22,7 +11,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await api.get('/api/user/profile');
+        const response = await api.get('/customer/profile');
         setUser(response.data);
       } catch (error) {
         console.log('Пользователь не аутентифицирован');
@@ -36,7 +25,8 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const response = await api.post('/api/login', { email, password });
+      const response = await api.post('/login', { email, password });
+      setAuthToken(response.data.token); 
       setUser(response.data.user);
       return true;
     } catch (error) {
@@ -47,7 +37,8 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await api.post('/api/logout');
+      await api.post('/logout');
+      setAuthToken(null); 
       setUser(null);
     } catch (error) {
       console.error('Ошибка выхода:', error);

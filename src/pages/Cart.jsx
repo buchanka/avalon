@@ -1,19 +1,110 @@
-import React from 'react';
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { ShoppingCart, X, ArrowLeft } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../components/ui/card";
+import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
+import AuthModal from '../components/AuthModal';
+import { toast } from 'sonner';
 
 export default function Cart() {
-  // Моковые данные товаров в корзине
-  const cartItems = [
-    { id: 1, name: "Свеча 'Лотос'", price: 543, quantity: 1, image: "/placeholder-phone.jpg" },
-    { id: 2, name: "Свеча 'Череп'", price: 457, quantity: 2, image: "/placeholder-case.jpg" },
-    { id: 3, name: "Свеча 'Лотос'", price: 543, quantity: 1, image: "/placeholder-airpods.jpg" },
-  ];
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, loading: authLoading } = useAuth();
 
-  // Подсчёт общей суммы
-  const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  useEffect(() => {
+    if (!user) {
+      navigate('/catalog');
+      toast.error('Для доступа к корзине необходимо авторизоваться');
+      return;
+    }
+    fetchCart();
+  }, [user, navigate]);
+
+  const fetchCart = async () => {
+    try {
+      const response = await api.get('/customer/cart');
+      setCartItems(response.data.cart.items || []);
+    } catch (error) {
+      console.error('Ошибка при загрузке корзины:', error);
+      toast.error('Ошибка при загрузке корзины');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateQuantity = async (cartItemId, newQuantity) => {
+    try {
+      await api.put(`/customer/cart/items/${cartItemId}`, {
+        quantity: newQuantity
+      });
+      fetchCart();
+      toast.success('Количество товара обновлено');
+    } catch (error) {
+      console.error('Ошибка при обновлении количества:', error);
+      toast.error('Ошибка при обновлении количества');
+    }
+  };
+
+  const handleRemoveItem = async (cartItemId) => {
+    try {
+      await api.delete(`/customer/cart/items/${cartItemId}`);
+      fetchCart();
+      toast.success('Товар удален из корзины');
+    } catch (error) {
+      console.error('Ошибка при удалении товара:', error);
+      toast.error('Ошибка при удалении товара');
+    }
+  };
+
+  const handleCheckout = async () => {
+    try {
+      navigate('/checkout');
+    } catch (error) {
+      console.error('Ошибка при переходе к оформлению:', error);
+      toast.error('Ошибка при переходе к оформлению заказа');
+    }
+  };
+
+  if (!user) {
+    return null;
+  }
+
+  if (loading) {
+    return <div className="container mx-auto py-8">Загрузка...</div>;
+  }
+
+  if (authLoading) {
+    return <div className="container mx-auto py-8 text-center">Загрузка...</div>;
+  }
+
+  const total = cartItems.reduce((sum, item) => {
+    const price = typeof item.price === 'number' ? item.price : Number(item.price);
+    return sum + (price * item.quantity);
+  }, 0);
+
+  if (!user) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card className="p-8 text-center">
+          <ShoppingCart className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+          <h3 className="text-xl font-medium mb-2">Необходима авторизация</h3>
+          <p className="text-gray-500 mb-6">Войдите в систему, чтобы просмотреть корзину</p>
+          <Button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2">
+            Войти
+          </Button>
+        </Card>
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+          type="login"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -23,34 +114,51 @@ export default function Cart() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Список товаров */}
         <div className="lg:col-span-2 space-y-4">
           {cartItems.length > 0 ? (
             cartItems.map((item) => (
               <Card key={item.id} className="flex flex-col sm:flex-row">
                 <div className="w-full sm:w-32 h-32 bg-gray-100 rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none overflow-hidden">
                   <img
-                    src={item.image}
-                    alt={item.name}
+                    src={item.product?.image || "/placeholder.jpg"}
+                    alt={item.product?.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="flex-1 p-4 flex flex-col sm:flex-row justify-between">
                   <div>
-                    <h3 className="font-medium">{item.name}</h3>
-                    <p className="text-gray-500 mt-1">{item.price.toFixed(2)} руб.</p>
+                    <h3 className="font-medium">{item.product?.name}</h3>
+                    <p className="text-gray-500 mt-1">
+                      {typeof item.price === 'number' ? item.price.toFixed(2) : Number(item.price).toFixed(2)} руб.
+                    </p>
                   </div>
                   <div className="mt-4 sm:mt-0 flex items-center gap-4">
                     <div className="flex items-center border rounded-md">
-                      <Button variant="ghost" size="sm" className="h-8 w-8">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8"
+                        onClick={() => handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        disabled={item.quantity <= 1}
+                      >
                         -
                       </Button>
                       <span className="px-2">{item.quantity}</span>
-                      <Button variant="ghost" size="sm" className="h-8 w-8">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8"
+                        onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                      >
                         +
                       </Button>
                     </div>
-                    <Button variant="ghost" size="icon" className="text-gray-500">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-gray-500"
+                      onClick={() => handleRemoveItem(item.id)}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -64,7 +172,7 @@ export default function Cart() {
           )}
         </div>
 
-        {/* Итого */}
+        
         <div className="space-y-4">
           <Card>
             <CardHeader>
@@ -81,18 +189,22 @@ export default function Cart() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
-                <Link to="/checkout">
-                    <Button className="w-full bg-cornflower_blue/30 hover:bg-cornflower_blue/50">Оформить заказ</Button>
-                </Link>
+              <Button 
+                className="w-full bg-cornflower_blue/30 hover:bg-cornflower_blue/50"
+                disabled={cartItems.length === 0}
+                onClick={handleCheckout}
+              >
+                Оформить заказ
+              </Button>
             </CardFooter>
           </Card>
-        </div>
-        <Button variant="outline" className="w-full bg-dust_pink/30 hover:bg-dust_pink/50" asChild>
+          <Button variant="outline" className="w-full bg-dust_pink/30 hover:bg-dust_pink/50" asChild>
             <Link to="/catalog" className="flex items-center justify-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Продолжить покупки
+              <ArrowLeft className="h-4 w-4" />
+              Продолжить покупки
             </Link>
-        </Button>
+          </Button>
+        </div>
       </div>
     </div>
   );

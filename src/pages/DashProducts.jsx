@@ -128,14 +128,14 @@ export default function DashProducts() {
               <TableRow key={product.id}>
                 <TableCell>
                   {product.image ? (
-                    <div className="w-20 h-20 rounded-md overflow-hidden">
+                    <div className="w-16 h-16 rounded-md overflow-hidden flex justify-center">
                       <img 
                         src={product.image} 
                         alt={product.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = '/placeholder-image.jpg';
+                          e.target.src = 'https://storage.yandexcloud.net/new-test-bucket-123/product-placeholder.webp';
                         }}
                       />
                     </div>

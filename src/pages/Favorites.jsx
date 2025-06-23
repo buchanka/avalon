@@ -1,105 +1,186 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, Heart } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { Card } from '../components/ui/card';
-import pink from '../assets/images/third block/pink.webp';
-import purple from '../assets/images/third block/purple.jpg';
-import blue from '../assets/images/third block/blue.jpg';
-import cocoa from '../assets/images/third block/cocoa.jpg';
 import { CardButtons } from '../components/CardButtons';
-
-const productData = [
-  { 
-    id: 0,
-    name: "pink",
-    price: "585 руб.",
-    image: pink,
-    isFavorite: true
-  },
-  { 
-    id: 1,
-    name: "purple",
-    price: "345 руб",
-    image: purple,
-    isFavorite: true
-  },
-  { 
-    id: 2,
-    name: "blue",
-    price: "567 руб.",
-    image: blue,
-    isFavorite: false
-  },
-  { 
-    id: 3,
-    name: "cocoa",
-    price: "776 руб.",
-    image: cocoa,
-    isFavorite: false
-  }
-];
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import AuthModal from '../components/AuthModal';
+import { toast } from 'sonner';
+import FavoriteIconFullSmall from '../contexts/icons/FavoriteIconFull';
 
 export default function Favorites() {
-  const [products, setProducts] = useState(productData);
+  const [favoriteProducts, setFavoriteProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, loading: authLoading } = useAuth();
 
-  const toggleFavorite = (productId) => {
-    setProducts(prev => prev.map(item => 
-      item.id === productId ? {...item, isFavorite: !item.isFavorite} : item
-    ));
+  useEffect(() => {
+    if (!authLoading) {
+      if (user) {
+        fetchFavorites();
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [user, authLoading]);
+
+  const fetchFavorites = async () => {
+    try {
+      const response = await api.get('/customer/favorites');
+      setFavoriteProducts(response.data || []);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+  
+  const handleAddToFavorites = async (product) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      await api.post('/customer/favorites', {
+        product_id: product.id
+      });
+      fetchFavorites();
+      toast.success('Товар добавлен в избранное');
+    } catch (err) {
+      setError('Не удалось добавить в избранное');
+      console.error(err);
+    }
   };
 
-  const favoriteItems = products.filter(item => item.isFavorite);
+  const handleRemoveFavorite = async (productId) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      await api.delete(`/customer/favorites/${productId}`);
+      setFavoriteProducts(prev => prev.filter(p => p.id !== productId));
+      toast.success('Товар удалён из избранного');
+    } catch (err) {
+      setError('Не удалось удалить из избранного');
+      console.error(err);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      await Promise.all(
+        favoriteProducts.map(product => 
+          api.delete(`/customer/favorites/${product.id}`)
+        )
+      );
+      setFavoriteProducts([]);
+      toast.success('Все товары удалены из избранного');
+    } catch (err) {
+      setError('Не удалось очистить избранное');
+      console.error(err);
+    }
+  };
+
+  if (authLoading || loading) {
+    return <div className="container mx-auto py-8 text-center">Загрузка...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card className="p-8 text-center">
+          <FavoriteIconFullSmall className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+          <h3 className="text-xl font-medium mb-2">Необходима авторизация</h3>
+          <p className="text-gray-500 mb-6">Войдите в систему, чтобы просмотреть избранное</p>
+          <Button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2">
+            Войти
+          </Button>
+        </Card>
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+          type="login"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex items-center gap-4 mb-6">
-        <Heart className="w-8 h-8 fill-red-500 text-red-500" />
-        <h1 className="text-2xl font-bold">Избранное</h1>
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <FavoriteIconFullSmall className="w-8 h-8 text-red-500" />
+          <h1 className="text-2xl font-bold">Избранное</h1>
+        </div>
+        {favoriteProducts.length > 0 && (
+          <Button 
+            variant="outline" 
+            onClick={handleClearAll}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Очистить избранное
+          </Button>
+        )}
       </div>
 
-      {favoriteItems.length > 0 ? (
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
+      {favoriteProducts.length > 0 ? (
         <section>
           <div className="py-4 max-w-[1300px] mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 px-4">
-              {favoriteItems.map((item) => (
-                <div key={item.id} className="h-full p-4 min-w-[250px] group">
+              {favoriteProducts.map((product) => (
+                <div key={product.id} className="h-full p-4 min-w-[250px] group">
                   <div className="flex flex-col h-full">
                     <div className="relative mx-auto w-full min-h-[250px] min-w-[250px] max-w-[320px] overflow-hidden rounded-lg">
                       <img
-                        src={item.image}
+                        src={product.image || 'https://storage.yandexcloud.net/new-test-bucket-123/product-placeholder.webp'}
                         loading="lazy"
-                        alt={item.name}
+                        alt={product.name}
                         className="w-full h-full object-cover rounded-lg transform hover:scale-110 transition-transform duration-300"
                       />
                       <button 
-                        onClick={() => toggleFavorite(item.id)}
+                        onClick={() => handleRemoveFavorite(product.id)}
                         className="absolute top-2 right-2 p-2 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 transition-all duration-200 group-hover:opacity-100 focus:outline-none"
-                        aria-label={item.isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
+                        aria-label="Удалить из избранного"
                       >
-                        <Heart 
-                          className={`h-5 w-5 ${item.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600 hover:text-red-500'}`}
-                        />
+                        <FavoriteIconFullSmall className="h-5 w-5 text-red-500" />
                       </button>
                     </div>
                     <div className="flex flex-col flex-grow justify-between mt-2">
                       <div className='text-center'>
                         <h4 className="font-montserrat italic text-black font-medium">
-                          {item.name}
+                          {product.name}
                         </h4>
                         <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                          {item.price}
+                          {product.price} руб.
                         </p>
                       </div>
                       <div className="mt-1 space-y-2">
                         <Link 
-                          to="/product_card" 
+                          to={`/product_card/${product.id}`} 
                           className="block text-center text-black hover:text-gray-600 transition-colors text-sm underline"
                         >
                           Подробнее
                         </Link>
                         <div className="flex justify-center">
-                          <CardButtons />
+                          <CardButtons productId={product.id} />
                         </div>
                       </div>
                     </div>
@@ -111,7 +192,7 @@ export default function Favorites() {
         </section>
       ) : (
         <Card className="p-8 text-center">
-          <Heart className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+          <FavoriteIconFullSmall className="w-16 h-16 mx-auto text-gray-300 mb-4" />
           <h3 className="text-xl font-medium mb-2">В избранном пока пусто</h3>
           <p className="text-gray-500 mb-6">Добавляйте товары в избранное, чтобы не потерять</p>
           <Button asChild>

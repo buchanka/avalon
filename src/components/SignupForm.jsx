@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { useAuth } from "../contexts/AuthContext";
 import { setAuthToken } from '../services/api';
 import InputMask from 'react-input-mask';
 import api from "../services/api";
 
-export default function SignupForm({ onSwitchForm }) {
+export default function SignupForm({ onSwitchForm, onSuccess }) {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -22,6 +23,7 @@ export default function SignupForm({ onSwitchForm }) {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -32,22 +34,25 @@ export default function SignupForm({ onSwitchForm }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setErrors({});
-    setSuccessMessage('');
+  e.preventDefault();
+  setIsLoading(true);
+  setErrors({});
+  setSuccessMessage('');
 
+  try {
+    const response = await api.post('/register', formData);
+    const { token, user } = response.data;
+
+    setAuthToken(token); 
+    localStorage.setItem('token', token);
     
-    try {
-      const response = await api.post('/register', formData);
-      const { token } = response.data;
-
-      localStorage.setItem('token', token);
-      setAuthToken(token);
+    await login(formData.email, formData.password);
+    
+    setSuccessMessage('Регистрация прошла успешно!');
+      if (onSuccess) onSuccess();
       
-      setSuccessMessage('Регистрация прошла успешно! Вы можете авторизоваться на вкладке вход.');
       setTimeout(() => {
-        navigate('/');
+        navigate('/user_profile');
       }, 2000);
     } catch (error) {
       if (error.response?.data?.errors) {
@@ -67,14 +72,13 @@ export default function SignupForm({ onSwitchForm }) {
         <p className="text-gray-500 mt-2">Создайте новый аккаунт</p>
       </div>
 
-      
       {successMessage && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
           {successMessage}
         </div>
       )}
 
-      <form className="space-y-2"onSubmit={handleSubmit}>
+      <form className="space-y-2" onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="first-name">Имя*</Label>
@@ -136,19 +140,19 @@ export default function SignupForm({ onSwitchForm }) {
               required
               value={formData.phone}
               onChange={handleChange}
-          >
-           {(inputProps) => (
-            <Input 
-              {...inputProps}
-            />
-          )}
-        </InputMask>
-        {errors.phone && <p className="text-red-500 text-sm">{errors.phone[0]}</p>}
-      </div>
+            >
+              {(inputProps) => (
+                <Input 
+                  {...inputProps}
+                />
+              )}
+            </InputMask>
+            {errors.phone && <p className="text-red-500 text-sm">{errors.phone[0]}</p>}
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="password">Пароль*</Label>
-           <Input 
+          <Input 
             id="password" 
             type="password" 
             required 

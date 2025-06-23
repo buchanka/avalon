@@ -35,25 +35,11 @@ export default function Sidebar() {
           </Link>
           <Link to="/admin_dash/categories" className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted">
             <List className="w-5 h-5" /> Категории свечей
-        </Link>
+          </Link>
+          <div className="flex justify-center p-4">
+            <AdminLogoutButton className="w-24 h-16"/>
+          </div>
         </nav>
-
-        <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Card className="p-5 my-8 hover:bg-muted transition-colors cursor-pointer">
-            <div className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              <span className="text-sm">Вход для админа</span>
-            </div>
-          </Card>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem>Профиль</DropdownMenuItem>
-          <DropdownMenuItem>
-            <AdminLogoutButton/>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
       </div>
     </div>
   );

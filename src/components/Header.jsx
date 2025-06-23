@@ -1,7 +1,5 @@
-import React, { useState } from "react";
-//контекст нав меню
+import React, { useState, useEffect } from "react";
 import { useMenuContext } from '../contexts/BurgerMenuContext/MenuContext';
-// контексты иконок
 import BurgerMenu from "../contexts/icons/BurgerMenu";
 import PinterestIcon from "../contexts/icons/PinterestIcon"
 import TelegramIconSmall from "../contexts/icons/TelegramIcon";
@@ -10,29 +8,84 @@ import SearchIconSmall from "../contexts/icons/SearchIcon";
 import AccountIconSmall from "../contexts/icons/AccountIcon";
 import CartIconSmall from "../contexts/icons/CartIcon";
 import HeartIconSmall from "../contexts/icons/HeartIcon";
-//лого
 import logo from '../assets/images/logo/logo.svg';
 import logo_gradient from '../assets/images/logo/logo_gradient.svg';
-//компоненты
 import SearchPopup from "./SearchPopup";
-import Dropdown from "./DropdownMenu";
 import MultilevelMenu from "./MultilevelResponsiveMenu";
 import ContactsPopup from "./ContactsPopup";
 import AuthModal from "./AuthModal";
-//стили
 import './Header.css';
-//компонент ссылки
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from '../services/api';
 
 function Header() {
     const [isOpen, setIsOpen] = useState(false);
     const [isBurgerOpen, setIsBurgerOpen] = useState(false);
     const {isMenuOpen} = useMenuContext();
+    const [authModal, setAuthModal] = useState({ open: false, type: null });
+    const [isAuthenticated, setIsAuthenticated] = useState(false); 
+    const [isAuthCheckComplete, setIsAuthCheckComplete] = useState(false);
+    const navigate = useNavigate();
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                await api.get('/customer/profile');
+                setIsAuthenticated(true);
+            } catch (error) {
+                setIsAuthenticated(false);
+                localStorage.removeItem('token'); 
+            } finally {
+                setIsAuthCheckComplete(true); 
+            }
+        };
+        
+        if (localStorage.getItem('token')) {
+            checkAuth();
+        } else {
+            setIsAuthCheckComplete(true); 
+            setIsAuthenticated(false);
+        }
+        
+        const handleStorageChange = (e) => {
+            if (e.key === 'token') {
+                checkAuth();
+            }
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await api.get('/categories');
+                setCategories(response.data);
+            } catch (error) {
+                console.error('Ошибка при загрузке категорий:', error);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
     const handleOpen = () => setIsOpen(true);
     const handleClose = () => setIsOpen(false);
     const handleBurgerOpen = () => setIsBurgerOpen(true);
     const handleBurgerClose = () => setIsBurgerOpen(false);
-    const [authModal, setAuthModal] = useState({ open: false, type: null });
+
+   const handleProfileClick = (e) => {
+        if (!isAuthenticated && isAuthCheckComplete) { 
+            e.preventDefault();
+            setAuthModal({ open: true, type: "login" });
+        } else if (isAuthenticated) {
+            navigate('/user_profile');
+        }
+    };
+
     return(
     <>
         <header className="">
@@ -58,12 +111,16 @@ function Header() {
                 </div>
 
                 <div className="flex space-x-3 items-center">
-                    <button aria-label="Поиск" onClick={handleOpen} type="button">
+                    <button aria-label="Поиск товара" onClick={handleOpen} type="button">
                         <SearchIconSmall className="" />
                     </button>
-                    <button onClick={() => setAuthModal({ open: true, type: "login" })}>
+                    <Link 
+                        to={isAuthenticated ? "/user_profile" : "#"} 
+                        onClick={handleProfileClick}
+                        aria-label="Профиль"
+                    >
                         <AccountIconSmall className="" />
-                    </button>
+                    </Link>
                     <Link to="/cart">
                         <CartIconSmall className=""/>
                     </Link>
@@ -82,28 +139,39 @@ function Header() {
                         </div>
                     </Link>
                 </div>
-                <div className="bg-frost p-2 border-y border-momo">
-                    <div className="hidden lg:flex flex-row place-content-center gap-4 my-2">
-                        {/*<div className="font-montserrat text-black font-medium">О нас</div>*/}
-                        <Dropdown/>
-                        <div className="font-montserrat text-black font-medium">Бестселлеры</div>
-                        <Link to="/faq">
-                            <div className="font-montserrat text-black font-medium">Поддержка</div>
+                <div className="hidden lg:flex flex-row place-content-center gap-4 my-2">
+                    <Link to="/catalog">
+                        <div className="font-montserrat text-black font-medium">Каталог</div>
+                    </Link>
+                     {categories.map(category => (
+                        <Link 
+                            key={category.id} 
+                            to={{
+                                pathname: '/catalog',
+                                search: `?categories=${category.id}`
+                            }}
+                            state={{ fromCategory: true }}
+                        >
+                            <div className="font-montserrat text-black font-medium">
+                                {category.name}
+                            </div>
                         </Link>
-                    </div>
+                    ))}
+                    <Link to="/faq">
+                        <div className="font-montserrat text-black font-medium">FAQ</div>
+                    </Link>
                 </div>
             </div>
         </header>
         <SearchPopup isOpen={isOpen} onClose={handleClose} />  
         <MultilevelMenu isBurgerOpen={isBurgerOpen} onClose={handleBurgerClose} />
         <AuthModal 
-        isOpen={authModal.open} 
-        type={authModal.type} 
-        onClose={() => setAuthModal({ open: false, type: null })} 
+            isOpen={authModal.open} 
+            type={authModal.type} 
+            onClose={() => setAuthModal({ open: false, type: null })} 
         />
     </>
     )
 };
-                               
 
 export default Header;

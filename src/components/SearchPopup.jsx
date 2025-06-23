@@ -1,11 +1,23 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { IoIosSearch } from 'react-icons/io';
 import { MdKeyboardArrowRight } from 'react-icons/md';
 import { MdOutlineArrowRightAlt } from "react-icons/md";
+import { useNavigate } from 'react-router-dom';
 
 export default function SearchPopup({ isOpen, onClose }) {
+    const [searchTerm, setSearchTerm] = useState('');
+    const navigate = useNavigate();
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchTerm.trim()) {
+            navigate(`/catalog?search=${encodeURIComponent(searchTerm)}`);
+            onClose();
+        }
+    };
+
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-10 opacity-85" onClose={onClose}>
@@ -46,25 +58,25 @@ export default function SearchPopup({ isOpen, onClose }) {
                                     Поиск
                                 </Dialog.Title>
 
-                                
-                             <div className="flex flex-col">
-                                
-                                <form className="relative mt-6 flex justify-center items-center">
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <IoIosSearch className="h-6 w-6 text-white" />
+                                <div className="flex flex-col">
+                                    <form onSubmit={handleSearch} className="relative mt-6 flex justify-center items-center">
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <IoIosSearch className="h-6 w-6 text-white" />
+                                            </div>
+                                            <input
+                                                type="search"
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="lg:w-[900px] bg-black border border-white text-white rounded-md pl-10 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-montserrat sm:w-[500px]"
+                                                placeholder="Найти..."
+                                            />
+                                            <button className="absolute inset-y-0 right-0 pr-3 flex items-center" type="submit"> 
+                                                <MdOutlineArrowRightAlt className="h-5 w-5 text-griff" />
+                                            </button>
                                         </div>
-                                        <input
-                                            type="search"
-                                            className="lg:w-[900px] bg-black border border-white text-white rounded-md pl-10 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-montserrat sm:w-[500px]"
-                                            placeholder="Найти..."
-                                        />
-                                        <button className="absolute inset-y-0 right-0 pr-3 flex items-center" type="submit"> 
-                                            <MdOutlineArrowRightAlt className="h-5 w-5 text-griff" />
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                                    </form>
+                                </div>
                             </Dialog.Panel>
                         </Transition.Child>
                     </div>
@@ -73,14 +85,3 @@ export default function SearchPopup({ isOpen, onClose }) {
         </Transition>
     );
 }
-
-
-{/*<div className="flex ml-72">
-    <div className="text-lg font-montserrat font-medium leading-6 text-white">
-        Поиск по параметрам
-        </div>
-            <div className="relative flex items-center pl-2">
-            <MdKeyboardArrowRight className="h-6 w-6 text-white" />
-        </div>
-    </div>*/}
-

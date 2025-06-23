@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import api from "../services/api";
 import { setAuthToken } from '../services/api';
 
@@ -17,6 +18,7 @@ export default function LoginForm({ onSwitchForm, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     const { id, value, type, checked } = e.target;
@@ -37,9 +39,11 @@ export default function LoginForm({ onSwitchForm, onSuccess }) {
         password: formData.password
       });
 
-      const { token } = response.data;
+      const { token, user } = response.data;
       localStorage.setItem('token', token);
       setAuthToken(token);
+      
+      await login(formData.email, formData.password);
       
       if (onSuccess) onSuccess();
       

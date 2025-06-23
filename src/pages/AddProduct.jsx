@@ -6,9 +6,13 @@ import { Textarea } from "../components/ui/textarea";
 import { Checkbox } from "../components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+
+
 export default function AddProduct() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -76,84 +80,85 @@ export default function AddProduct() {
     });
   };
 
-   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  
+  if (!formData.name || !formData.price || !formData.category_id || !formData.stock) {
+    toast.error('Пожалуйста, заполните все обязательные поля');
+    setLoading(false);
+    return;
+  }
 
-    try {
-      let imageUrl = '';
-      if (formData.image) {
+  try {
+    let imageUrl = '';
+    if (formData.image) {
+      try {
         const imageFormData = new FormData();
         imageFormData.append('image', formData.image);
 
-        try {
-          const uploadResponse = await api.post('/admin/products/upload-image-new', imageFormData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          });
-
-          if (!uploadResponse.data || !uploadResponse.data.url) {
-            throw new Error('Неверный формат ответа сервера');
+        const uploadResponse = await api.post('/admin/products/upload-image-new', imageFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
           }
-          
-          imageUrl = uploadResponse.data.url;
-          
-          toast.success('Изображение загружено!');
-        } catch (uploadError) {
-          console.error('Ошибка загрузки изображения:', uploadError);
-          toast.error(uploadError.response?.data?.message || 'Ошибка при загрузке изображения');
-          setLoading(false);
-          return; 
+        });
+
+        if (!uploadResponse.data?.url) {
+          throw new Error('Не удалось получить URL изображения');
         }
+        
+        imageUrl = uploadResponse.data.url;
+      } catch (uploadError) {
+        console.error('Ошибка загрузки изображения:', uploadError);
+        toast.error(uploadError.response?.data?.message || 'Ошибка при загрузке изображения');
+        setLoading(false);
+        return;
       }
-
-      const productData = {
-        ...formData,
-        image: imageUrl,
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock) || 0, // Преобразование в число
-        height: formData.height ? parseFloat(formData.height) : null,
-        width: formData.width ? parseFloat(formData.width) : null,
-        length: formData.length ? parseFloat(formData.length) : null,
-        burn_time: formData.burn_time ? parseFloat(formData.burn_time) : null,
-        collection_ids: formData.collection_ids
-      };
-
-      const createPromise = api.post('/admin/products', productData);
-
-      await toast.promise(createPromise, {
-        loading: 'Создание товара...',
-        success: () => {
-          setFormData({
-            name: '',
-            price: '',
-            category_id: '',
-            description: '',
-            height: '',
-            width: '',
-            length: '',
-            burn_time: '',
-            stock: '',
-            image: null,
-            collection_ids: []
-          });
-          setImagePreview(null);
-          navigate('/admin_dash/products?created=true');
-          return 'Товар успешно добавлен!';
-        },
-        error: (error) => {
-          return error.response?.data?.message || 'Произошла ошибка при создании товара';
-        }
-      });
-
-    } catch (error) {
-      console.error('Ошибка при добавлении товара:', error);
-      toast.error(error.response?.data?.message || 'Произошла ошибка');
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const productData = {
+      ...formData,
+      image: imageUrl,
+      price: parseFloat(formData.price),
+      stock: parseInt(formData.stock) || 0,
+      height: formData.height ? parseFloat(formData.height) : null,
+      width: formData.width ? parseFloat(formData.width) : null,
+      length: formData.length ? parseFloat(formData.length) : null,
+      burn_time: formData.burn_time ? parseFloat(formData.burn_time) : null,
+      collection_ids: formData.collection_ids
+    };
+
+    await toast.promise(api.post('/admin/products', productData), {
+      loading: 'Создание товара...',
+      success: () => {
+        setFormData({
+          name: '',
+          price: '',
+          category_id: '',
+          description: '',
+          height: '',
+          width: '',
+          length: '',
+          burn_time: '',
+          stock: '',
+          image: null,
+          collection_ids: []
+        });
+        setImagePreview(null);
+        navigate('/admin_dash/products?created=true');
+        return 'Товар успешно добавлен!';
+      },
+      error: (error) => {
+        return error.response?.data?.message || 'Произошла ошибка при создании товара';
+      }
+    });
+  } catch (error) {
+    console.error('Ошибка при добавлении товара:', error);
+    toast.error(error.response?.data?.message || 'Произошла ошибка');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="space-y-6 p-6">

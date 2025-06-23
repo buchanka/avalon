@@ -64,7 +64,7 @@ export default function UserProfile() {
                   alt="Аватар"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.src = "/placeholder-avatar.jpg";
+                    e.target.src = "https://storage.yandexcloud.net/new-test-bucket-123/placeholder-avatar.png";
                     if (user.avatar) {
                       setTimeout(() => {
                         e.target.src = `${user.avatar}?retry=${Date.now()}`;

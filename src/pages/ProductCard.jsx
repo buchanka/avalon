@@ -1,12 +1,10 @@
 import React from 'react';
-import { ProductCard } from "../components/ProductCard"
+import { ProductCard } from "../components/ProductCard";
 
 function ProductCards(){
-    return(
-        <>
-        <ProductCard/>
-        </>
-    )
+    return (
+    <ProductCard />
+)
 }
 
-export default ProductCards
+export default ProductCards;

@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
 import { StrictMode } from 'react';
+//контекст AuthProvider
+import { AuthProvider } from './contexts/AuthContext';
 //контекст меню
 import { MenuProvider } from './contexts/BurgerMenuContext/MenuContext';
 //компоненты
@@ -10,6 +12,9 @@ import Layout from './Layout/Layout';
 import AdminDashLayout from './Layout/AdminDashLayout';
 //уведомления
 import { Toaster } from 'sonner';
+//защищенные маршруты
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 //страницы
 import Home from './pages/Home';
 import ErrorPage from './pages/ErrorPage';
@@ -53,7 +58,7 @@ const router = createBrowserRouter([
   },
 
   {
-    path: "/product_card",
+    path: "/product_card/:id",
     element: (<Layout><ProductCards/></Layout>),
     errorElement: <ErrorPage/>
   },
@@ -66,14 +71,13 @@ const router = createBrowserRouter([
 
   {
     path: "/cart",
-    element: (<Layout><Cart/></Layout>),
-    errorElement: <ErrorPage/>
+    element: <Layout><Cart /></Layout>,
+    errorElement: <ErrorPage />
   },
-
   {
     path: "/orders",
-    element: (<Layout><Orders/></Layout>),
-    errorElement: <ErrorPage/>
+    element: <Layout><Orders /></Layout>,
+    errorElement: <ErrorPage />
   },
 
   {
@@ -181,9 +185,11 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <MenuProvider>
-      <RouterProvider router={router} /> 
-    </MenuProvider>
+    <AuthProvider>
+      <MenuProvider>
+        <RouterProvider router={router} /> 
+      </MenuProvider>
     <Toaster position="top-right" richColors />
+    </AuthProvider>
   </StrictMode>
 );

@@ -11,7 +11,6 @@ function Home(){
         <CarouselComponent></CarouselComponent>
         <SecondBlock></SecondBlock>
         <TileOfCollections></TileOfCollections>
-        <Reviews></Reviews>
         <Accordion></Accordion>
         </>
     )
